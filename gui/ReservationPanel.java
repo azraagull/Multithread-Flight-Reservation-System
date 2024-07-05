@@ -3,6 +3,7 @@ package gui;
 import database.ReservationDatabase;
 import entities.Flight;
 import entities.Seat;
+import threads.ReaderThread;
 import threads.WriterThread;
 
 import javax.swing.*;
@@ -55,9 +56,18 @@ public class ReservationPanel extends JPanel {  // Rezervasyon  yapmak için bir
         selectButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                selectedCustomer = (String) customerComboBox.getSelectedItem();
+             selectedCustomer = (String) customerComboBox.getSelectedItem();
                 selectedFlightId = flightComboBox.getSelectedIndex();
-                loadSeats();
+                new Thread(() -> {
+                    ReaderThread readerThread = new ReaderThread(db, selectedFlightId, selectedCustomer, lock);
+                    readerThread.start();
+                    try {
+                        readerThread.join();
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                    }
+                    loadSeats();
+                }).start();
             }
         });
 
